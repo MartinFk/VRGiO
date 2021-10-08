@@ -1,2 +1,4 @@
+matplotlib==3.4.2
+uvicorn==0.12.1
 networkx==2.5.1
 fastapi== 0.63.0

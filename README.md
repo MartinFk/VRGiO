@@ -16,3 +16,8 @@ docker run -p 8000:8000 vrgio_server
 ```bash
 http://0.0.0.0:8000/docs
 ```
+### Alternatively run server without Docker
+```bash
+cd /vrgio/server/
+uvicorn server:app
+```

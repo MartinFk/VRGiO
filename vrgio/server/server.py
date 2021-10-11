@@ -19,6 +19,18 @@ structure_manager = StructureManager()
 async def register_shape(
     src_ip: str, type: str = "main", component_class: str = "cube"
 ):
+    """
+    Adds new node i.e., cube to Graph, which gets
+    connected in the shape structure physically.
+
+    Args:
+        src_ip (str): [description]
+        type (str, optional): [description]. Defaults to "main".
+        component_class (str, optional): [description]. Defaults to "cube".
+
+    Returns:
+        [type]: [description]
+    """
     component = [(src_ip, {"type": type, "component_class": component_class})]
     structure_manager.add_component(component)
     return {"status": True, "component_id": component[0][0], "event": "add"}
@@ -41,7 +53,7 @@ async def count_nodes():
 
 @app.get("/component/info")
 async def get_info(src_ip: str):
-    neighbors, component_class, type = structure_manager.get_neighbors(src_ip)
+    neighbors, component_class, type = structure_manager.inspect_node(src_ip)
     return {
         "status": True,
         "neighbors": neighbors,
@@ -51,6 +63,6 @@ async def get_info(src_ip: str):
     }
 
 
-@app.get("/export/graph")
-async def save_graph():
-    structure_manager.save_graph()
+@app.get("/visualize/graph")
+async def visualize_graph():
+    structure_manager.visualize_graph()

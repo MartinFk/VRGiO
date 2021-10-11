@@ -1,9 +1,18 @@
 from component_schema import Component
 from typing import Tuple
 import networkx as nx
-from networkx import Graph
+from networkx import DiGraph
 from networkx.drawing.nx_agraph import write_dot, graphviz_layout
 import matplotlib.pyplot as plt
+
+SIDES_MAP = {
+    "left": "right",
+    "right": "left",
+    "up": "down",
+    "down": "up",
+    "front": "back",
+    "back": "front",
+}
 
 
 class StructureManager:
@@ -11,7 +20,7 @@ class StructureManager:
         """
         Initializes a Bi-directional Graph and related variables
         """
-        self.structure: Graph = Graph()
+        self.structure: DiGraph = DiGraph()
 
     def add_component(self, component: Tuple):
         """
@@ -36,6 +45,7 @@ class StructureManager:
         ## TODO: Validate if both nodes exist in the Graph
         ## TODO: Overwrite node connection for a given side
         self.structure.add_edge(node_one_ip, node_two_ip, side=side)
+        self.structure.add_edge(node_two_ip, node_one_ip, side=SIDES_MAP[side])
 
     def inspect_node(self, src_ip: str) -> Tuple:
         """

@@ -59,9 +59,31 @@ async def connect_shape(node_one_ip: str, node_two_ip: str, side: str):
     return response
 
 
+@app.get("/disconnect/components")
+async def connect_shape(node_one_ip: str, node_two_ip: str):
+    """
+    Removes bi-directional connection in Graph between two nodes representing
+    the physical components that got attached to each other.
+
+    Args:
+        node_one_ip (str): Node's IP which got a new node attached to it.
+        node_two_ip (str): The new node's IP that got itself attached.
+
+    Returns:
+        response (Dict): Status about the operation
+    """
+    response = {"status": True, "event": "disconnect"}
+    try:
+        structure_manager.remove_connection(node_one_ip, node_two_ip)
+    except:
+        response = {"status": False, "event": "error disconnecting nodes"}
+    return response
+
+
 @app.get("/component/count")
 async def count_nodes():
-    """[summary]
+    """
+    Returns the total count of
 
     Returns:
         response (Dict): Status about the operation

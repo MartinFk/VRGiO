@@ -47,6 +47,18 @@ class StructureManager:
         self.structure.add_edge(node_one_ip, node_two_ip, side=side)
         self.structure.add_edge(node_two_ip, node_one_ip, side=SIDES_MAP[side])
 
+    def remove_connection(self, node_one_ip: str, node_two_ip: str):
+        """
+        Removes bi-directional connection in Graph between two nodes representing
+        the physical components that got attached to each other.
+
+        Args:
+            node_one_ip (str): Node's IP which got a new node attached to it.
+            node_two_ip (str): The new node's IP that got itself attached.
+        """
+        deletion_edges = [(node_one_ip, node_two_ip), (node_two_ip, node_one_ip)]
+        self.structure.remove_edges_from(deletion_edges)
+
     def inspect_node(self, src_ip: str) -> Tuple:
         """
         Returns metadata about any given node using its

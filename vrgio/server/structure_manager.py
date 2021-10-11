@@ -31,7 +31,7 @@ class StructureManager:
         Args:
             node_one_ip (str): Node's IP which got a new node attached to it.
             node_two_ip (str): The new node's IP that got itself attached.
-            side (str): Side at which node got connected.
+            side (str): Side at which cube got connected {left, right, up, down, front, back}
         """
         ## TODO: Validate if both nodes exist in the Graph
         ## TODO: Overwrite node connection for a given side

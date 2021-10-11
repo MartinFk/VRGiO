@@ -19,19 +19,53 @@ structure_manager = StructureManager()
 async def register_shape(
     src_ip: str, type: str = "main", component_class: str = "cube"
 ):
+    """
+    Adds new node i.e., cube to Graph, which gets
+    connected in the shape structure physically.
+
+    Args:
+        src_ip (str): [description]
+        type (str, optional): [description]. Defaults to "main".
+        component_class (str, optional): [description]. Defaults to "cube".
+
+    Returns:
+        response (Dict): Status about the operation
+    """
     component = [(src_ip, {"type": type, "component_class": component_class})]
     structure_manager.add_component(component)
     return {"status": True, "component_id": component[0][0], "event": "add"}
 
 
 @app.get("/connect/components")
-async def connect_shape(src_ip: str, side: str):
-    structure_manager.add_connection(src_ip, side)
-    return {"status": True, "event": "connect"}
+async def connect_shape(node_one_ip: str, node_two_ip: str, side: str):
+    """
+    Etasblishes bi-directional connection in Graph between two nodes representing
+    the physical components that got attached to each other.
+
+
+    Args:
+        node_one_ip (str): Node's IP which got a new node attached to it.
+        node_two_ip (str): The new node's IP that got itself attached.
+        side (str): Side at which cube got connected {left, right, up, down, front, back}
+
+    Returns:
+        response (Dict): Status about the operation
+    """
+    response = {"status": True, "event": "connect"}
+    try:
+        structure_manager.add_connection(node_one_ip, node_two_ip, side)
+    except:
+        response = {"status": False, "event": "error connecting nodes"}
+    return response
 
 
 @app.get("/component/count")
 async def count_nodes():
+    """[summary]
+
+    Returns:
+        response (Dict): Status about the operation
+    """
     return {
         "status": True,
         "component_count": structure_manager.structure.number_of_nodes(),
@@ -41,7 +75,18 @@ async def count_nodes():
 
 @app.get("/component/info")
 async def get_info(src_ip: str):
-    neighbors, component_class, type = structure_manager.get_neighbors(src_ip)
+    """
+    Returns metadata about any given node using its
+    IP address as the identifier. For inspecting any
+    node for its neighbors and its own type.
+
+    Args:
+        src_ip (str): [description]
+
+    Returns:
+        response (Dict): Status about the operation
+    """
+    neighbors, component_class, type = structure_manager.inspect_node(src_ip)
     return {
         "status": True,
         "neighbors": neighbors,
@@ -51,6 +96,9 @@ async def get_info(src_ip: str):
     }
 
 
-@app.get("/export/graph")
-async def save_graph():
-    structure_manager.save_graph()
+@app.get("/visualize/graph")
+async def visualize_graph():
+    """
+    Visualizes the entire Graph with all components shown
+    """
+    structure_manager.visualize_graph()

@@ -124,3 +124,4 @@ async def visualize_graph():
     Visualizes the entire Graph with all components shown
     """
     structure_manager.visualize_graph()
+    return {"status": True, "event": "export"}

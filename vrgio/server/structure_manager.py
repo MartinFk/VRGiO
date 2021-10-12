@@ -1,9 +1,10 @@
 from component_schema import Component
-from typing import Tuple
+from typing import Tuple, Optional, Dict
 import networkx as nx
 from networkx import DiGraph
 from networkx.drawing.nx_agraph import write_dot, graphviz_layout
 import matplotlib.pyplot as plt
+import requests
 
 SIDES_MAP = {
     "left": "right",
@@ -77,11 +78,31 @@ class StructureManager:
             nx.get_node_attributes(self.structure, "type")[src_ip],
         )
 
+    def actuate(self, src_ip: str, payload: Optional[Dict]) -> bool:
+        """
+        Actuates the physical component or performs message passing from
+        one component to another.
+
+         Args:
+             src_ip (str): Unique IP address of that node.
+             payload (Dict): Message or actuation details.
+
+         Returns:
+             status (bool): Metadata associated with the given node.
+        """
+        status = True
+        try:
+            requests.get(f"{src_ip}/actuate")
+        except:
+            status = False
+        return status
+
     def visualize_graph(self):
         """
         Visualizes the entire Graph with all components shown
         """
         # same layout using matplotlib with no labels
+        fig = plt.figure(figsize=(12, 12))
         plt.title("VRGiO Shape")
         nx.draw_networkx(self.structure)
         ## plt.show()

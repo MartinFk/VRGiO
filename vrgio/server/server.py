@@ -1,3 +1,4 @@
+from typing import Optional, Dict
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from structure_manager import StructureManager
@@ -115,6 +116,25 @@ async def get_info(src_ip: str):
         "class": component_class,
         "type": type,
         "event": "info",
+    }
+
+
+@app.get("/component/actuate")
+async def actuate(src_ip: str, payload: Optional[Dict]):
+    """
+    Actuates the physical component or performs message passing from
+    one component to another.
+
+    Args:
+        src_ip (str): IP address of the component to be actuated.
+
+    Returns:
+        response (Dict): Status about the operation
+    """
+    status: bool = structure_manager.actuate(src_ip)
+    return {
+        "status": status,
+        "event": "actuate",
     }
 
 

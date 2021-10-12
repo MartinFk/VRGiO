@@ -119,7 +119,7 @@ async def get_info(src_ip: str):
     }
 
 
-@app.get("/component/actuate")
+@app.post("/component/actuate")
 async def actuate(src_ip: str, payload: Optional[Dict]):
     """
     Actuates the physical component or performs message passing from
@@ -131,7 +131,7 @@ async def actuate(src_ip: str, payload: Optional[Dict]):
     Returns:
         response (Dict): Status about the operation
     """
-    status: bool = structure_manager.actuate(src_ip)
+    status: bool = structure_manager.actuate(src_ip, payload)
     return {
         "status": status,
         "event": "actuate",

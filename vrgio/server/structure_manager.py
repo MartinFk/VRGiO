@@ -92,7 +92,7 @@ class StructureManager:
         """
         status = True
         try:
-            requests.get(f"{src_ip}/actuate")
+            requests.get(f"http://{src_ip}/actuate")
         except:
             status = False
         return status

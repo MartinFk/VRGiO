@@ -84,4 +84,5 @@ class StructureManager:
         # same layout using matplotlib with no labels
         plt.title("VRGiO Shape")
         nx.draw_networkx(self.structure)
-        plt.show()
+        ## plt.show()
+        plt.savefig("vrgio_graph.png", format="PNG")

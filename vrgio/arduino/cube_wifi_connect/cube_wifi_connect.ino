@@ -52,10 +52,11 @@ void registerCube(){
 
 // actuates any actuator connected to cube
 void actuate(){
-  Serial.println("received");
+  Serial.println("request received");
   for (int i = 0; i < server.args(); i++) {
-      Serial.println(server.argName(i));
-      Serial.println(server.arg(i));
+      Serial.print(server.argName(i));
+      Serial.print(server.arg(i));
+      Serial.println("");
       /**
       TODO: ADD ANY ACTUATION HERE.
       **/

@@ -11,7 +11,7 @@ Following are the main functions supported by the server.
 * Total count of components registered <br/>
 * Actuates the physical component or performs message passing from one component to another <br/>
 * Visualizes the entire Graph with all components shown <br/>
-The details for each feature can be accessed using the following URL <br/>
+* The details for each feature can be accessed using the following URL <br/>
 [http://localhost:8000/docs](http://localhost:8000/docs)
 ### Build the Docker Image
 ```bash

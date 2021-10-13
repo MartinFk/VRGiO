@@ -1,7 +1,11 @@
 # VRGiO
 
-## TODO:
-## Add Arduino Docs
+## Arduino
+Following are the main functions supported by the server.
+
+* Register cube with unique IP address with the server<br/>
+* Listen to requests from other cubes and perform any actuation/action based on request data <br/>
+
 ## VRGiO Server
 Following are the main functions supported by the server.
 

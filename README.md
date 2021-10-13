@@ -17,7 +17,7 @@ Following are the main functions supported by the server.
 * Actuates the physical component or performs message passing from one component to another <br/>
 * Visualizes the entire Graph with all components shown <br/>
 * The details for each feature can be accessed using the following URL after you run the server <br/>
-[http://localhost:8000/docs](http://localhost:8000/docs)
+[http://localhost:8000/docs](http://0.0.0.0:8000/docs)
 ## 1.3 VRGiO Server Setup Guide
 ### 1.3.1.1 Build the Docker Image
 ```bash

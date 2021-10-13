@@ -13,6 +13,7 @@ Following are the main functions supported by the server.
 * Attach two components (cubes) to each other<br/>
 * Remove bi-directional connection in Graph between two nodes representing the physical components that got attached to each other <br/>
 * Total count of components registered <br/>
+* Retrieve metadata about any given node using its IP address as the identifier. For inspecting any node for its neighbors and its own type. <br/>
 * Actuates the physical component or performs message passing from one component to another <br/>
 * Visualizes the entire Graph with all components shown <br/>
 * The details for each feature can be accessed using the following URL after you run the server <br/>

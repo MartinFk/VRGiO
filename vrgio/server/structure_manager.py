@@ -39,7 +39,7 @@ class StructureManager:
         """
         self.structure.add_nodes_from(component)
 
-    def add_connection(self, node_one_ip: str, node_two_ip: str, side: str):
+    def add_connection(self, node_one_ip: str, node_two_ip: str, side: str) -> None:
         """
         Etasblishes bi-directional connection in Graph between two nodes representing
         the physical components that got attached to each other.
@@ -49,8 +49,9 @@ class StructureManager:
             node_two_ip (str): The new node's IP that got itself attached.
             side (str): Side at which cube got connected {left, right, up, down, front, back}
         """
-        ## TODO: Check if same IP pairs have different sides connected
-        ## TODO: Constrain self loop
+        ## constrain self loop
+        if node_one_ip == node_two_ip:
+            return None
 
         ## check if there's a node on the `side` already present
         ## if present then remove it for both nodes

@@ -1,12 +1,12 @@
 # VRGiO
 
-## Arduino
-Following are the main functions supported by the server.
+## VRGiO WEMOS Features
+Following are the main functions currently supported by the .
 
 * Register cube with unique IP address with the server<br/>
 * Listen to requests from other cubes and perform any actuation/action based on request data <br/>
 
-## VRGiO Server
+## VRGiO Server Features
 Following are the main functions supported by the server.
 
 * Register cube with unique IP address <br/>

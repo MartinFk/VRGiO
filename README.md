@@ -1,12 +1,12 @@
-# VRGiO
+# 1. VRGiO
 
-## VRGiO WEMOS Features
+## 1.1 VRGiO WEMOS Features
 Following are the main functions currently supported by the .
 
 * Register cube with unique IP address with the server<br/>
 * Listen to requests from other cubes and perform any actuation/action based on request data <br/>
 
-## VRGiO Server Features
+## 1.2 VRGiO Server Features
 Following are the main functions supported by the server.
 
 * Register cube with unique IP address <br/>
@@ -17,21 +17,21 @@ Following are the main functions supported by the server.
 * Visualizes the entire Graph with all components shown <br/>
 * The details for each feature can be accessed using the following URL <br/>
 [http://localhost:8000/docs](http://localhost:8000/docs)
-## VRGiO Server Setup Guide
-### Build the Docker Image
+## 1.3 VRGiO Server Setup Guide
+### 1.3.1.1 Build the Docker Image
 ```bash
 cd /vrgio/server/
 docker build . -t vrgio_server
 ```
-### Start the Docker Container
+### 1.3.1.2 Start the Docker Container
 ```bash
 docker run -p 8000:8000 vrgio_server
 ```
-### Access the server UI
+### 1.3.1.3 Access the server UI
 ```bash
 http://0.0.0.0:8000/docs
 ```
-### Alternatively run server without Docker
+### 1.3.2 Alternatively run server without Docker
 ```bash
 cd /vrgio/server/
 uvicorn server:app

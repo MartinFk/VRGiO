@@ -6,7 +6,11 @@
 Following are the main functions supported by the server.
 
 * Register cube with unique IP address <br/>
-* Attach two components to each other<br/>
+* Attach two components (cubes) to each other<br/>
+* Remove bi-directional connection in Graph between two nodes representing the physical components that got attached to each other <br/>
+* Total count of components registered <br/>
+* Actuates the physical component or performs message passing from one component to another <br/>
+* Visualizes the entire Graph with all components shown <br/>
 The details for each feature can be accessed using the following URL <br/>
 [http://localhost:8000/docs](http://localhost:8000/docs)
 ### Build the Docker Image

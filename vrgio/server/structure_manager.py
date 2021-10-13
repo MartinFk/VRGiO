@@ -61,10 +61,20 @@ class StructureManager:
         self.structure.add_edge(node_one_ip, node_two_ip, side=side)
         self.structure.add_edge(node_two_ip, node_one_ip, side=SIDES_MAP[side])
 
-    def connectivity_sanity_check(self, src_ip, side):
+    def connectivity_sanity_check(self, src_ip: str, side: str):
+        """
+        Performs a sanity check for a node whether it has a node already
+        connected to the side a new node has requested to be attached to.
+
+        Args:
+            src_ip (str): IP address of the node being sanity checked.
+            side (str): requested side for node attachment
+        """
+        ## get neighbor nodes and their IPs
         neigbor_nodes: Dict = dict(self.structure[src_ip])
         neighbor_nodes_ip: List = list(neigbor_nodes.keys())
 
+        ## iterate over node and delete connection for the side if exists
         for neighbor_node_ip in neighbor_nodes_ip:
             if neigbor_nodes[neighbor_node_ip]["side"] == side:
                 self.remove_connection(src_ip, neighbor_node_ip)

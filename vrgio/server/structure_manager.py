@@ -1,11 +1,17 @@
+from networkx.algorithms.assortativity import neighbor_degree
 from component_schema import Component
-from typing import Tuple, Optional, Dict
+from typing import List, Tuple, Optional, Dict
 import networkx as nx
 from networkx import DiGraph
 from networkx.drawing.nx_agraph import write_dot, graphviz_layout
 import matplotlib.pyplot as plt
 import requests
 
+"""
+This map is useful when for instance a cube gets connected to left and you want
+to establish a bi-directional connection, hence the reverse edge would be named
+as right, this map will act as a quick lookup in that instance.
+"""
 SIDES_MAP = {
     "left": "right",
     "right": "left",
@@ -43,12 +49,37 @@ class StructureManager:
             node_two_ip (str): The new node's IP that got itself attached.
             side (str): Side at which cube got connected {left, right, up, down, front, back}
         """
-        ## TODO: Validate if both nodes exist in the Graph
-        ## TODO: Overwrite node connection for a given side
+        ## TODO: Check if same IP pairs have different sides connected
+        ## TODO: Constrain self loop
+
+        ## check if there's a node on the `side` already present
+        ## if present then remove it for both nodes
+        self.connectivity_sanity_check(node_one_ip, side)
+        self.connectivity_sanity_check(node_two_ip, SIDES_MAP[side])
+
+        ## make newer connection
         self.structure.add_edge(node_one_ip, node_two_ip, side=side)
         self.structure.add_edge(node_two_ip, node_one_ip, side=SIDES_MAP[side])
 
-    def remove_connection(self, node_one_ip: str, node_two_ip: str):
+    def connectivity_sanity_check(self, src_ip: str, side: str):
+        """
+        Performs a sanity check for a node whether it has a node already
+        connected to the side a new node has requested to be attached to.
+
+        Args:
+            src_ip (str): IP address of the node being sanity checked.
+            side (str): requested side for node attachment
+        """
+        ## get neighbor nodes and their IPs
+        neigbor_nodes: Dict = dict(self.structure[src_ip])
+        neighbor_nodes_ip: List = list(neigbor_nodes.keys())
+
+        ## iterate over node and delete connection for the side if exists
+        for neighbor_node_ip in neighbor_nodes_ip:
+            if neigbor_nodes[neighbor_node_ip]["side"] == side:
+                self.remove_connection(src_ip, neighbor_node_ip)
+
+    def remove_connection(self, node_one_ip: str, node_two_ip: str) -> None:
         """
         Removes bi-directional connection in Graph between two nodes representing
         the physical components that got attached to each other.
@@ -97,7 +128,7 @@ class StructureManager:
             status = False
         return status
 
-    def visualize_graph(self):
+    def visualize_graph(self) -> None:
         """
         Visualizes the entire Graph with all components shown
         """

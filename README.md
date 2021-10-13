@@ -17,6 +17,7 @@ Following are the main functions supported by the server.
 * Visualizes the entire Graph with all components shown <br/>
 * The details for each feature can be accessed using the following URL <br/>
 [http://localhost:8000/docs](http://localhost:8000/docs)
+## VRGiO Server Setup Guide
 ### Build the Docker Image
 ```bash
 cd /vrgio/server/

@@ -1,4 +1,4 @@
-# 1. VRGiO
+# VRGiO
 
 ## 1.1 VRGiO WEMOS Features
 Following are the main functions currently supported by the .

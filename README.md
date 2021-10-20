@@ -35,5 +35,6 @@ http://0.0.0.0:8000/docs
 ### 1.3.2 Alternatively run server without Docker
 ```bash
 cd /vrgio/server/
+pip3 install -r requirements.txt
 uvicorn server:app
 ```

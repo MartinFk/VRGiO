@@ -6,20 +6,14 @@ from networkx import DiGraph
 from networkx.drawing.nx_agraph import write_dot, graphviz_layout
 import matplotlib.pyplot as plt
 import requests
+import datetime
 
 """
 This map is useful when for instance a cube gets connected to left and you want
 to establish a bi-directional connection, hence the reverse edge would be named
 as right, this map will act as a quick lookup in that instance.
 """
-SIDES_MAP = {
-    "left": "right",
-    "right": "left",
-    "up": "down",
-    "down": "up",
-    "front": "back",
-    "back": "front",
-}
+TIMEOUT_THRESHOLD = 2000
 
 
 class StructureManager:
@@ -28,6 +22,9 @@ class StructureManager:
         Initializes a Bi-directional Graph and related variables
         """
         self.structure: DiGraph = DiGraph()
+        self.last_connected: str = None
+        self.last_connected_side: str = None
+        self.last_connected_timeout: str = None
 
     def add_component(self, component: Tuple):
         """
@@ -39,28 +36,56 @@ class StructureManager:
         """
         self.structure.add_nodes_from(component)
 
-    def add_connection(self, node_one_ip: str, node_two_ip: str, side: str) -> None:
+    def add_connection(self, node_ip: str, side: str) -> None:
         """
         Etasblishes bi-directional connection in Graph between two nodes representing
         the physical components that got attached to each other.
 
         Args:
-            node_one_ip (str): Node's IP which got a new node attached to it.
+            node_ip (str): Node's IP which got a new node attached to it.
             node_two_ip (str): The new node's IP that got itself attached.
             side (str): Side at which cube got connected {left, right, up, down, front, back}
         """
+        if (
+            self.last_connected_timeout
+            and datetime.datetime.now() > self.last_connected_timeout
+        ):
+            (
+                self.last_connected,
+                self.last_connected_side,
+                self.last_connected_timeout,
+            ) = (None, None, None)
+
+        if not self.last_connected:
+            self.last_connected = node_ip
+            self.last_connected_side = side
+            self.last_connected_timeout = datetime.datetime.now() + datetime.timedelta(
+                milliseconds=TIMEOUT_THRESHOLD
+            )
+
         ## constrain self loop
-        if node_one_ip == node_two_ip:
-            return None
+        elif (
+            node_ip != self.last_connected
+            and datetime.datetime.now() < self.last_connected_timeout
+        ):
+            ## check if there's a node on the `side` already present
+            ## if present then remove it for both nodes
+            self.connectivity_sanity_check(node_ip, side)
+            self.connectivity_sanity_check(
+                self.last_connected, self.last_connected_side
+            )
 
-        ## check if there's a node on the `side` already present
-        ## if present then remove it for both nodes
-        self.connectivity_sanity_check(node_one_ip, side)
-        self.connectivity_sanity_check(node_two_ip, SIDES_MAP[side])
+            ## make newer connection
+            self.structure.add_edge(node_ip, self.last_connected, side=side)
+            self.structure.add_edge(
+                self.last_connected, node_ip, side=self.last_connected_side
+            )
 
-        ## make newer connection
-        self.structure.add_edge(node_one_ip, node_two_ip, side=side)
-        self.structure.add_edge(node_two_ip, node_one_ip, side=SIDES_MAP[side])
+            (
+                self.last_connected,
+                self.last_connected_side,
+                self.last_connected_timeout,
+            ) = (None, None, None)
 
     def connectivity_sanity_check(self, src_ip: str, side: str):
         """

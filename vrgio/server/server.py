@@ -38,15 +38,14 @@ async def register_shape(
 
 
 @app.get("/connect/components")
-async def connect_shape(node_one_ip: str, node_two_ip: str, side: str):
+async def connect_shape(node_ip: str, side: str):
     """
     Etasblishes bi-directional connection in Graph between two nodes representing
     the physical components that got attached to each other.
 
 
     Args:
-        node_one_ip (str): Node's IP which got a new node attached to it.
-        node_two_ip (str): The new node's IP that got itself attached.
+        node_ip (str): Node's IP which got a new node attached to it.
         side (str): Side at which cube got connected {left, right, up, down, front, back}
 
     Returns:
@@ -54,7 +53,7 @@ async def connect_shape(node_one_ip: str, node_two_ip: str, side: str):
     """
     response = {"status": True, "event": "connect"}
     try:
-        structure_manager.add_connection(node_one_ip, node_two_ip, side)
+        structure_manager.add_connection(node_ip, side)
     except:
         response = {"status": False, "event": "error connecting nodes"}
     return response

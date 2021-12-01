@@ -4,7 +4,7 @@
 //Requires PubSubClient found here: https://github.com/knolleary/pubsubclient
 //
 //ESP8266 Simple MQTT light controller
-
+// VIDEO TUTORIAL: https://www.youtube.com/watch?v=PgsH43Tpqjc&ab_channel=ItKindaWorks
 
 #include <PubSubClient.h>
 #include <ESP8266WiFi.h>

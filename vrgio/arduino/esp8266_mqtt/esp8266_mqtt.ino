@@ -4,6 +4,7 @@
 //Requires PubSubClient found here: https://github.com/knolleary/pubsubclient
 //
 //ESP8266 Simple MQTT light controller
+// Install mosquito broker from here: http://mosquitto.org/blog/2013/01/mosquitto-debian-repository/
 // VIDEO TUTORIAL: https://www.youtube.com/watch?v=PgsH43Tpqjc&ab_channel=ItKindaWorks
 
 #include <PubSubClient.h>

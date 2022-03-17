@@ -125,9 +125,6 @@ public class building_plan : MonoBehaviour
         sc = GameObject.FindGameObjectWithTag("ServerCommunication").GetComponent<Server_Communication>();
     }
 
-    private float nextActionTime = 0.0f;
-    public float period = 0.5f;
-
     void Update()
     {
         List<GameObject> cubesNotChecked = new List<GameObject>(cubes.Values);
@@ -215,13 +212,6 @@ public class building_plan : MonoBehaviour
                 }
             }
         }
-
-        // if (Time.time > nextActionTime)
-        // {
-        //     nextActionTime += period;
-        //     serverComManage.ComponentCount();
-        //     // serverComManage.GetIpInfo();
-        // }
     }
 
     void GenerateCube(string name)
@@ -317,69 +307,4 @@ public class building_plan : MonoBehaviour
                 break;
         }
     }
-
-    // void InitiateOperation(OperationType type, string[,,] plan = null)
-    // {
-    //     switch (type)
-    //     {
-    //         case OperationType.BUILD_WITH_PLAN:
-    //             operationType = type;
-    //             operationActive = true;
-    //             gameObject.SetActive(true);
-    //             Assert.IsNotNull(plan);
-
-    //             break;
-    //         case OperationType.BUILD_WITHOUT_PLAN:
-    //             operationType = type;
-    //             operationActive = true;
-    //             break;
-    //     }
-    // }
-
-    // void EndOperation()
-    // {
-    //     if (operationActive == true)
-    //     {
-    //         operationActive = false;
-    //         if (operationType == OperationType.BUILD_WITH_PLAN)
-    //         {
-    //             gameObject.SetActive(false);
-    //         }
-    //     }
-    // }
-
-    // void AcceptResponsebodies(Dictionary<string, object> response)
-    // {
-    //     switch (response["event"])
-    //     {
-    //         case "ping": //ping
-    //             break;
-    //         case "add": //registercomponent
-    //             break;
-    //         case "connect": //connectcomponents success
-    //             break;
-    //         case "error connectiong nodes": //connectcomponents failure
-    //             break;
-    //         case "disconnect": //disconnectcomponents success
-    //             break;
-    //         case "error disconnecting nodes": //disconnectcomponents failure
-    //             break;
-    //         case "count": //countnodes
-    //             tmptxt.text = "Amount of currently connected cubes: " + response["component_count"].ToString();
-    //             break;
-    //         case "info": //getinfo
-    //             break;
-    //         case "ip_info": //getipinfo
-    //             if (response["ip_list"].GetType() == typeof(string[]))
-    //             {
-    //                 //ip_list = response["ip_list"];
-    //             }
-    //             break;
-    //         case "actuate": //actuate
-    //             break;
-    //         case "export": //visualizegraph
-    //             break;
-    //     }
-
-    // }
 }

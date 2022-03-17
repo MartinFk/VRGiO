@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9f9ef2a9f4042714cabdcf7aaca05617, type: 3}
+  m_Name: MeshVoxelizerPreset
+  m_EditorClassIdentifier: 
+  settings:
+  - presetName: DefaultSetting
+    showProgressBar: 1
+    generationType: 1
+    voxelSizeType: 1
+    subdivisionLevel: 10
+    absoluteVoxelSize: 0.049
+    precision: 3
+    uvConversion: 1
+    approximation: 1
+    ignoreScaling: 0
+    alphaCutout: 0
+    CutoffValue: 0.5
+    modifyVoxel: 0
+    voxelMesh: {fileID: 4300000, guid: 27de85efec7570243aef4fccf3e7a729, type: 2}
+    voxelScale: {x: 1, y: 1, z: 1}
+    voxelRotation: {x: 0, y: 0, z: 0}
+    boneWeightConversion: 1
+    backfaceCulling: 0
+    optimization: 0
+    compactOutput: 1
+    fillCenter: 0
+    centerMaterial: {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}

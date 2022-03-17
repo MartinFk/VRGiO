@@ -1,19 +1,23 @@
-from networkx.algorithms.assortativity import neighbor_degree
-from component_schema import Component
-from typing import List, Tuple, Optional, Dict
-import networkx as nx
-from networkx import DiGraph
-from networkx.drawing.nx_agraph import write_dot, graphviz_layout
-import matplotlib.pyplot as plt
-import requests
 import datetime
+import os
+from ast import Assert
+from typing import Dict, List, Optional, Tuple
+
+import matplotlib.pyplot as plt
+import networkx as nx
+import requests
+from networkx import DiGraph
+from networkx.algorithms.assortativity import neighbor_degree
+from networkx.drawing.nx_agraph import graphviz_layout, write_dot
+
+from component_schema import Component
 
 """
 This map is useful when for instance a cube gets connected to left and you want
 to establish a bi-directional connection, hence the reverse edge would be named
 as right, this map will act as a quick lookup in that instance.
 """
-TIMEOUT_THRESHOLD = 2000
+TIMEOUT_THRESHOLD = 5000
 
 
 class StructureManager:
@@ -135,32 +139,11 @@ class StructureManager:
             nx.get_node_attributes(self.structure, "type")[src_ip],
         )
 
-    def actuate(self, src_ip: str, payload: Optional[Dict]) -> bool:
-        """
-        Actuates the physical component or performs message passing from
-        one component to another.
+    def cleanse_component_from_structure(self, src_ip: str):
+        if (src_ip in self.structure.nodes):
+            neigbor_nodes: Dict = dict(self.structure[src_ip])
+            neighbor_nodes_ip: List = list(neigbor_nodes.keys())
 
-         Args:
-             src_ip (str): Unique IP address of that node.
-             payload (Dict): Message or actuation details.
-
-         Returns:
-             status (bool): Metadata associated with the given node.
-        """
-        status = True
-        try:
-            requests.get(f"http://{src_ip}/actuate")
-        except:
-            status = False
-        return status
-
-    def visualize_graph(self) -> None:
-        """
-        Visualizes the entire Graph with all components shown
-        """
-        # same layout using matplotlib with no labels
-        fig = plt.figure(figsize=(12, 12))
-        plt.title("VRGiO Shape")
-        nx.draw_networkx(self.structure)
-        ## plt.show()
-        plt.savefig("vrgio_graph.png", format="PNG")
+            for neighbor_ip in neighbor_nodes_ip:
+                self.remove_connection(src_ip, neighbor_ip)
+            self.structure.remove_node(src_ip)

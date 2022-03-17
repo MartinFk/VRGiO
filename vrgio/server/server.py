@@ -1,7 +1,37 @@
-from typing import Optional, Dict
+import asyncio
+import json
+from asyncio import get_event_loop
+from http import client
+from pickle import FALSE
+from time import sleep
+from turtle import delay
+from typing import Dict, List, Optional
+
+import websockets
+import websockets.server
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from h11 import ConnectionClosed
+from starlette.websockets import WebSocket
+
 from structure_manager import StructureManager
+
+# current_touches = List()
+
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: Dict[str, WebSocket] = {}
+
+    def connect(self, client_id: str, websocket: WebSocket):
+        self.active_connections[client_id] = websocket
+
+    def disconnect(self, client_id: str):
+        self.active_connections.pop(client_id, None)
+        structure_manager.cleanse_component_from_structure(client_id)
+
+    async def broadcast_text(self, message: str):
+        for connection in self.active_connections:
+            await connection.send_text(message)
 
 app = FastAPI()
 origins = ["*"]
@@ -14,7 +44,33 @@ app.add_middleware(
 )
 
 structure_manager = StructureManager()
+connection_manager = ConnectionManager()
 
+@app.websocket("/ws/{client_id}")
+async def websocket_endpoint(websocket: WebSocket, client_id: str):
+    await websocket.accept()
+    connection_manager.connect(client_id, websocket)
+    try:
+        while True:
+            data = await websocket.receive_text()
+            await websocket.send_text("get touch data")
+    except:
+        websocket.close()
+        connection_manager.disconnect(client_id)
+
+@app.websocket_route("/unity_ws")
+async def unity_websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+    try:
+        while True:
+            await websocket.receive_text()
+            await websocket.send_json(
+                {"type": "json", 
+                "nodes": [node for node in structure_manager.structure.nodes],
+                "edges": [{"node1":edge[0], "node2":edge[1], "side":edge[2]["side"]} for edge in structure_manager.structure.edges.data()]})
+            await asyncio.sleep(1)
+    except:
+        await websocket.close()
 
 @app.get("/register/component")
 async def register_shape(
@@ -34,6 +90,7 @@ async def register_shape(
     """
     component = [(src_ip, {"type": type, "component_class": component_class})]
     structure_manager.add_component(component)
+    # for (int i in range(6)):
     return {"status": True, "component_id": component[0][0], "event": "add"}
 
 
@@ -117,6 +174,15 @@ async def get_info(src_ip: str):
         "event": "info",
     }
 
+@app.get("/component/ip_info")
+async def get_ip_info():
+    ip_list = structure_manager.list_nodes()
+    return {
+        "status": True,
+        "ip_list": ip_list,
+        "event": "ip_info"
+    }
+
 
 @app.post("/component/actuate")
 async def actuate(src_ip: str, payload: Optional[Dict]):
@@ -130,17 +196,22 @@ async def actuate(src_ip: str, payload: Optional[Dict]):
     Returns:
         response (Dict): Status about the operation
     """
-    status: bool = structure_manager.actuate(src_ip, payload)
-    return {
-        "status": status,
+    try:
+        websocket = connection_manager.active_connections[src_ip]
+    except:
+        response = {"status": False, "event": "error connecting nodes"}
+
+    connection_manager.send_json(payload, websocket)
+    json_answer = await connection_manager.receive_json(websocket)
+
+    response = {
+        "status": json_answer["status"],
         "event": "actuate",
+        "message": json_answer["message"]
     }
+    return response
 
+import uvicorn
 
-@app.get("/visualize/graph")
-async def visualize_graph():
-    """
-    Visualizes the entire Graph with all components shown
-    """
-    structure_manager.visualize_graph()
-    return {"status": True, "event": "export"}
+if __name__ == '__main__':
+    uvicorn.run(app, host="0.0.0.0", port=8000, ws_ping_interval=5, ws_ping_timeout=10)

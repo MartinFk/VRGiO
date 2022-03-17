@@ -16,3 +16,11 @@ class Component(BaseModel):
         "top": None,
         "bottom": None,
     }
+    touched_at: Dict = {
+        "left": None,
+        "right": None,
+        "front": None,
+        "back": None,
+        "top": None,
+        "bottom": None,
+    }

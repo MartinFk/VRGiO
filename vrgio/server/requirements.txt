@@ -1,5 +1,6 @@
 requests==2.25.1
 matplotlib==3.4.2
-uvicorn==0.12.1
+uvicorn==0.17.4
+websockets==10.2
 networkx==2.5.1
 fastapi== 0.63.0

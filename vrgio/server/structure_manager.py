@@ -147,3 +147,8 @@ class StructureManager:
             for neighbor_ip in neighbor_nodes_ip:
                 self.remove_connection(src_ip, neighbor_ip)
             self.structure.remove_node(src_ip)
+
+    def change_touch(self, src_ip: str, side: str, value: bool):
+        if (src_ip in self.structure.nodes):
+            node = self.structure.nodes.pop(src_ip)
+            print(node)

@@ -1,14 +1,13 @@
 import asyncio
 import json
 from asyncio import get_event_loop
+from asyncio.windows_events import NULL
 from http import client
 from pickle import FALSE
 from time import sleep
 from turtle import delay
 from typing import Dict, List, Optional
 
-import websockets
-import websockets.server
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from h11 import ConnectionClosed
@@ -33,6 +32,9 @@ class ConnectionManager:
         for connection in self.active_connections:
             await connection.send_text(message)
 
+    def return_websocket(self, client_id: str):
+        return self.active_connections[client_id]
+
 app = FastAPI()
 origins = ["*"]
 app.add_middleware(
@@ -46,6 +48,7 @@ app.add_middleware(
 structure_manager = StructureManager()
 connection_manager = ConnectionManager()
 sides_touched = {}
+unitywebsocket = WebSocket()
 
 @app.websocket("/ws/{client_id}")
 async def websocket_endpoint(websocket: WebSocket, client_id: str):
@@ -62,6 +65,7 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
 @app.websocket_route("/unity_ws")
 async def unity_websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
+    unitywebsocket = websocket
     try:
         while True:
             await websocket.receive_text()
@@ -72,6 +76,7 @@ async def unity_websocket_endpoint(websocket: WebSocket):
                 "sides_touched": [{"src_ip":ip, "sides":sides_touched[ip]} for ip in sides_touched.keys()]})
             await asyncio.sleep(1)
     except:
+        unitywebsocket = WebSocket()
         await websocket.close()
 
 @app.get("/register/component")
@@ -90,7 +95,7 @@ async def register_shape(
     Returns:
         response (Dict): Status about the operation
     """
-    component = [(src_ip, {"type": type, "component_class": component_class})]
+    component = [(src_ip, {"type": type, "component_class": component_class, "touch": {"left": False, "right": False, "top": False, "bottom": False, "front": False, "back": False}})]
     structure_manager.add_component(component)
     sides_touched[src_ip] = []
     # for (int i in range(6)):
@@ -202,6 +207,12 @@ async def get_value(src_ip: str, type:int, value:int):
                     sides_touched[src_ip].remove(type)
                     if (not(type in sides_touched[src_ip])):
                         break
+# async def get_value(shape_class: str, type: int, value: int):
+#     await unitywebsocket.send_json(
+#         {"type": "json_touch",
+#          "ip": shape_class,
+#          "side": type,
+#          "value": value})
 
 @app.post("/component/actuate")
 async def actuate(src_ip: str, payload: Optional[Dict]):

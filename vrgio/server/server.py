@@ -45,6 +45,7 @@ app.add_middleware(
 
 structure_manager = StructureManager()
 connection_manager = ConnectionManager()
+sides_touched = {}
 
 @app.websocket("/ws/{client_id}")
 async def websocket_endpoint(websocket: WebSocket, client_id: str):
@@ -67,7 +68,8 @@ async def unity_websocket_endpoint(websocket: WebSocket):
             await websocket.send_json(
                 {"type": "json", 
                 "nodes": [node for node in structure_manager.structure.nodes],
-                "edges": [{"node1":edge[0], "node2":edge[1], "side":edge[2]["side"]} for edge in structure_manager.structure.edges.data()]})
+                "edges": [{"node1":edge[0], "node2":edge[1], "side":edge[2]["side"]} for edge in structure_manager.structure.edges.data()],
+                "sides_touched": [{"src_ip":ip, "sides":sides_touched[ip]} for ip in sides_touched.keys()]})
             await asyncio.sleep(1)
     except:
         await websocket.close()
@@ -90,6 +92,7 @@ async def register_shape(
     """
     component = [(src_ip, {"type": type, "component_class": component_class})]
     structure_manager.add_component(component)
+    sides_touched[src_ip] = []
     # for (int i in range(6)):
     return {"status": True, "component_id": component[0][0], "event": "add"}
 
@@ -117,7 +120,7 @@ async def connect_shape(node_ip: str, side: str):
 
 
 @app.get("/disconnect/components")
-async def connect_shape(node_one_ip: str, node_two_ip: str):
+async def disconnect_shape(node_one_ip: str, node_two_ip: str):
     """
     Removes bi-directional connection in Graph between two nodes representing
     the physical components that got attached to each other.
@@ -183,6 +186,22 @@ async def get_ip_info():
         "event": "ip_info"
     }
 
+@app.get("/get_value/component")
+async def get_value(src_ip: str, type:int, value:int):
+    if not(value == 0):
+        # if (type > 5):
+            connect_shape(src_ip, "left")
+        # else:
+            sides_touched[src_ip].append(type)
+    else:
+        if (type > 5):
+            disconnect_shape(src_ip, src_ip)
+        else:
+            if (src_ip in sides_touched.keys()):
+                while True:
+                    sides_touched[src_ip].remove(type)
+                    if (not(type in sides_touched[src_ip])):
+                        break
 
 @app.post("/component/actuate")
 async def actuate(src_ip: str, payload: Optional[Dict]):

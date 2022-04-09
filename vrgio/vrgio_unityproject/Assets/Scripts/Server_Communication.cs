@@ -16,17 +16,25 @@ public class Edge
 }
 
 [Serializable]
+public class Touch
+{
+    public string src_ip;
+    public List<int> sides;
+}
+
+[Serializable]
 public class NodeEdgeInfo
 {
     public string type;
     public List<string> nodes;
     public List<Edge> edges;
+    public List<Touch> sides_touched;
 }
 
 public class Server_Communication : MonoBehaviour
 {
     // URI
-    private string API_URI = "http://localhost:8000";
+    private string API_URI = "http://localhost:8000"; //192.168.43.68
     private string WEBSOCKET_URI = "ws://localhost:8000";
 
     private WebSocket websocket;
@@ -37,6 +45,7 @@ public class Server_Communication : MonoBehaviour
 
     public List<string> nodes;
     public List<Edge> edges;
+    public List<Touch> sides_touched;
 
     // List of response bodies, sorted from newest(0) to oldest(n)
     // response bodies contain status about an operation
@@ -112,6 +121,7 @@ public class Server_Communication : MonoBehaviour
                         var data = JsonUtility.FromJson<NodeEdgeInfo>(stringData);
                         nodes = data.nodes;
                         edges = data.edges;
+                        sides_touched = data.sides_touched;
                     }
                     ws.SendAsync("Continue sending data", SendComplete);
                 }

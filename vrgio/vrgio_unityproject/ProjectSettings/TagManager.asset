@@ -5,6 +5,7 @@ TagManager:
   serializedVersion: 2
   tags:
   - ServerCommunication
+  - VoxelResult
   layers:
   - Default
   - TransparentFX

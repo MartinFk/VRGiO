@@ -4,7 +4,6 @@
 
 #include <Arduino.h>
 
-#include <WebSocketsClient.h>
 #include <Wire.h>
 //#include <Adafruit_GFX.h>
 //#include <Adafruit_SSD1306.h>
@@ -24,47 +23,20 @@ Adafruit_MPU6050 mpu;
 uint16_t lasttouched = 0;
 uint16_t currtouched = 0;
 
-const String server_host_name = "192.168.0.171";
-const String port = "8000";
-const char* ssid = "huwuwei";
-const char* password = "12345678";
+const String server_host_name = "192.168.43.68:8000";
+const char* ssid = "MiA";
+const char* password = "qwer1234";
 ESP8266WebServer server(80); // webserver object for listening to HTTP requests
-WebSocketsClient webSocket;  // websocket object
-
-void webSocketEvent(WStype_t type, uint8_t * payload, size_t length){
-  switch (type){
-    case WStype_DISCONNECTED:
-      Serial.printf("[WSc] Disconnected!\n");
-      break;
-
-    case WStype_CONNECTED: {
-        Serial.printf("[WSc] Connected to url %s\n", payload);
-        webSocket.sendTXT("Connected");
-      }
-      break;
-
-    case WStype_TEXT:
-      Serial.printf("[WSc] get text: %s\n", payload);
-      if (String((char *)(payload)) == "get touch data") {
-        webSocket.sendTXT("type: {}, value: {}");
-      }
-      break;
-
-    case WStype_BIN:
-      Serial.printf("[WSc] get text: %s\n", payload);
-      break;
-    }
-}
 
 void setup () {
 
  
   Serial.begin(9600);
 
-  //if (!cap.begin(0x5A)) {
-    //Serial.println("MPR121 not found, check wiring?");
-    //for(;;);
-  //}
+  if (!cap.begin(0x5A)) {
+    Serial.println("MPR121 not found, check wiring?");
+    for(;;);
+  }
   WiFi.begin(ssid, password);
  
   while (WiFi.status() != WL_CONNECTED) {
@@ -80,12 +52,6 @@ void setup () {
   Serial.print(WiFi.localIP());
   Serial.println("/");
   
-  // websocket
-  Serial.println("websocket to: " + server_host_name + ":" + port.toInt());
-  webSocket.begin(server_host_name, port.toInt(), "/ws/" + WiFi.localIP().toString());
-  webSocket.onEvent(webSocketEvent);
-  webSocket.setReconnectInterval(5000);
-  
   // register cube with the server
   registerCube();
   server.on("/actuate", actuate); //listen for any http message to perform actuation
@@ -96,10 +62,9 @@ void setup () {
 // registers cube with the server for centralized event management 
 void registerCube(){
   if (WiFi.status() == WL_CONNECTED) { //Check WiFi connection status
-    Serial.println("Send Register Cube");
     WiFiClient client; //Declare an object of class WiFiClient
     HTTPClient http;  //Declare an object of class HTTPClient
-    http.begin(client, "http://"+server_host_name+":"+port+"/register/component?shape_class=cube&type=main&src_ip="+WiFi.localIP().toString());  //Specify request destination
+    http.begin(client, "http://"+server_host_name+"/register/component?shape_class=cube&type=main&src_ip="+WiFi.localIP().toString());  //Specify request destination
     int httpCode = http.GET();                                  //Send the request
     if (httpCode > 0) { //Check the returning code
       String payload = http.getString();   //Get the request response payload
@@ -115,8 +80,7 @@ void touch_value(int w,int q)
   if (WiFi.status() == WL_CONNECTED) { //Check WiFi connection status
     WiFiClient client; //Declare an object of class WiFiClient
     HTTPClient http;  //Declare an object of class HTTPClient
-    //http.begin(client, "http://"+server_host_name+":"+port+"/get_value/component?src_ip="+ WiFi.localIP().toString()+"&type=" + String(q)+"&value="+w);  //Specify request destination
-    http.begin(client, "http://"+server_host_name+":"+port+"//component?src_ip="+ WiFi.localIP().toString()+"&type=" + String(q)+"&value="+w);  //Specify request destination
+    http.begin(client, "http://"+server_host_name+"/get_value/component?shape_class="+ WiFi.localIP().toString()+"&type=" + String(q)+"&value="+w);  //Specify request destination
     int httpCode = http.GET();                                  //Send the request
     if (httpCode > 0) { //Check the returning code
       String payload = http.getString();   //Get the request response payload
@@ -161,7 +125,7 @@ void loop()
     if (!(currtouched & _BV(i)) && (lasttouched & _BV(i)) ) {
       //Serial.print(i); Serial.println(" released");
       // oled.print(i); oled.println(" released"); oled.display();
-      touch_value(0, i);
+
     }
   }
 
@@ -172,6 +136,7 @@ void loop()
   
   delay(60);
   
-  server.handleClient();   
-  webSocket.loop();
+
+server.handleClient();   
+  
 }

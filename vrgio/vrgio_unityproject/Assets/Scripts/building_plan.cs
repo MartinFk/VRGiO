@@ -8,11 +8,12 @@ public class Voxelizer
 
     public GameObject VoxelizeObject(GameObject objectToVoxel, Material centerMaterial, Mesh voxelMesh)
     {
+        objectToVoxel.SetActive(false);
         return VoxelizeObject(
             objectToVoxel,
             GenerationType.SeparateVoxels,
             VoxelSizeType.Subdivision,
-            10, 0.05f,
+            2, 0.05f,
             Precision.VeryHigh,
             true,
             false,
@@ -88,6 +89,18 @@ public class Voxelizer
         }
         GameObject voxelObject = this.meshVoxelizer.VoxelizeMesh();
         this.meshVoxelizer = new MeshVoxelizer();
+        voxelObject.tag = "VoxelResult";
+        VoxelGroup vg = voxelObject.GetComponent<VoxelGroup>();
+        vg.voxelMesh = voxelMesh;
+        vg.RebuildVoxels();
+        foreach (MeshRenderer mr in voxelObject.GetComponentsInChildren<MeshRenderer>())
+        {
+            mr.material = centerMaterial;
+        }
+        foreach (Transform tr in voxelObject.GetComponentsInChildren<Transform>())
+        {
+            //tr.localScale = Vector3.one;
+        }
         return voxelObject;
     }
 }
@@ -103,9 +116,10 @@ public class building_plan : MonoBehaviour
     // private string[] ip_list = new string[10];
 
     public GameObject objectToVoxel;
-    private Material _centerMaterial = null;
-    private Mesh _voxelMesh = null;
-    private Voxelizer voxelizer = new Voxelizer();
+    public Material _centerMaterial = null;
+    public Mesh _voxelMesh = null;
+    public Voxelizer voxelizer = new Voxelizer();
+    public GameObject voxelizedObject;
 
     public GameObject cubePrefab;
     public Transform cubeParent;
@@ -113,6 +127,8 @@ public class building_plan : MonoBehaviour
     public Material newCubeToStructure;
     public Material connectedToStructure;
     public Material disconnectedFromStructure;
+    public Material touched;
+    public Material untouched;
 
     public Dictionary<string, GameObject> cubes = new Dictionary<string, GameObject>();
     public List<(Edge, Edge)> edges = new List<(Edge, Edge)>();
@@ -142,6 +158,70 @@ public class building_plan : MonoBehaviour
         foreach (GameObject go in cubesNotChecked)
         {
             go.SetActive(false);
+        }
+
+        foreach (Touch touch in sc.sides_touched)
+        {
+            if (!cubes.ContainsKey(touch.src_ip))
+            {
+                continue;
+            }
+            GameObject cube = cubes[touch.src_ip];
+            List<int> already_touched = new List<int>() { 0, 1, 2, 3, 4, 5 };
+            foreach (int side in touch.sides)
+            {
+                switch (side)
+                {
+                    case 0:
+                        already_touched.Remove(0);
+                        cube.transform.Find("cubev6_touchpad1_touchpad").GetComponent<Renderer>().material = touched;
+                        break;
+                    case 1:
+                        already_touched.Remove(1);
+                        cube.transform.Find("cubev6_touchpad_touchpad4").GetComponent<Renderer>().material = touched;
+                        break;
+                    case 2:
+                        already_touched.Remove(2);
+                        cube.transform.Find("cubev6_touchpad_touchpad3").GetComponent<Renderer>().material = touched;
+                        break;
+                    case 3:
+                        already_touched.Remove(3);
+                        cube.transform.Find("cubev6_touchpad_touchpad2").GetComponent<Renderer>().material = touched;
+                        break;
+                    case 4:
+                        already_touched.Remove(4);
+                        cube.transform.Find("cubev6_touchpad_touchpad5").GetComponent<Renderer>().material = touched;
+                        break;
+                    case 5:
+                        already_touched.Remove(5);
+                        cube.transform.Find("cubev6_touchpad_touchpad6").GetComponent<Renderer>().material = touched;
+                        break;
+                }
+            }
+            foreach (int side in already_touched)
+            {
+                switch (side)
+                {
+                    case 0:
+                        cube.transform.Find("cubev6_touchpad1_touchpad").GetComponent<Renderer>().material = untouched;
+                        break;
+                    case 1:
+                        cube.transform.Find("cubev6_touchpad_touchpad4").GetComponent<Renderer>().material = untouched;
+                        break;
+                    case 2:
+                        cube.transform.Find("cubev6_touchpad_touchpad3").GetComponent<Renderer>().material = untouched;
+                        break;
+                    case 3:
+                        cube.transform.Find("cubev6_touchpad_touchpad2").GetComponent<Renderer>().material = untouched;
+                        break;
+                    case 4:
+                        cube.transform.Find("cubev6_touchpad_touchpad5").GetComponent<Renderer>().material = untouched;
+                        break;
+                    case 5:
+                        cube.transform.Find("cubev6_touchpad_touchpad6").GetComponent<Renderer>().material = untouched;
+                        break;
+                }
+            }
         }
 
         List<Edge> edgesAlreadyChecked = new List<Edge>();
@@ -195,24 +275,46 @@ public class building_plan : MonoBehaviour
         }
 
         List<string> alreadyPlaced = new List<string>();
-        cubes[origin].transform.position = Vector3.zero;
-        alreadyPlaced.Add(origin);
+        List<Transform> voxelTransforms = new List<Transform>();
+        int voxelIterator = 1;
+        if (voxelizedObject != null)
+        {
+            voxelTransforms = new List<Transform>(voxelizedObject.GetComponentsInChildren<Transform>());
+            Debug.Log(voxelTransforms[1].name);
+        }
+        if (origin != "" && voxelTransforms.Count == 0)
+        {
+            cubes[origin].transform.position = Vector3.zero;
+            alreadyPlaced.Add(origin);
+        }
+
         foreach (string node in new List<string>(cubes.Keys))
         {
-            if (node == origin) continue;
+            if (node == origin && voxelTransforms.Count == 0) continue;
             foreach ((Edge, Edge) edgepair in this.edges)
             {
-                if (edgepair.Item1.node1 == node)
+                if (edgepair.Item1.node1 == node && voxelTransforms.Count == 0)
                 {
                     Place(edgepair.Item2, edgepair.Item1, cubes[edgepair.Item1.node2], cubes[node]);
                 }
-                else if (edgepair.Item1.node2 == node)
+                else if (edgepair.Item1.node2 == node && voxelTransforms.Count == 0)
                 {
                     Place(edgepair.Item1, edgepair.Item2, cubes[node], cubes[edgepair.Item1.node1]);
                 }
             }
+            if (voxelTransforms.Count > 0)
+            {
+                Debug.Log(voxelIterator);
+                cubes[node].transform.position = voxelTransforms[voxelIterator].position;
+                Vector3 voxelsize = voxelTransforms[voxelIterator].gameObject.GetComponentInChildren<MeshFilter>().sharedMesh.bounds.size;
+                cubes[node].transform.localScale = new Vector3(voxelsize.x * 1.8f, voxelsize.y * 1.8f, voxelsize.z * 1.8f);
+                cubes[node].transform.position = new Vector3(cubes[node].transform.position.x, cubes[node].transform.position.y - voxelsize.y * 35, cubes[node].transform.position.z);
+                // voxelTransforms[voxelIterator].gameObject.SetActive(false);
+                voxelIterator += 1;
+            }
         }
     }
+
 
     void GenerateCube(string name)
     {
@@ -223,16 +325,22 @@ public class building_plan : MonoBehaviour
         }
         else
         {
-            newCube = cubes[name] = Instantiate(cubePrefab, Vector3.zero, Quaternion.identity, cubeParent);
+            newCube = cubes[name] = Instantiate(cubePrefab, new Vector3(50 * Mathf.RoundToInt(Random.Range(-1, 2)), 0, 50 * Mathf.RoundToInt(Random.Range(-1, 2))), Quaternion.identity, cubeParent);
         }
         newCube.name = name;
         ChangeMaterial(newCube, newCubeToStructure);
         if (origin == null || origin == "") origin = name;
     }
 
-    GameObject VoxelizeObject()
+    public void VoxelizeObject()
     {
-        return voxelizer.VoxelizeObject(objectToVoxel, _centerMaterial, _voxelMesh);
+        voxelizedObject = voxelizer.VoxelizeObject(objectToVoxel, _centerMaterial, _voxelMesh);
+    }
+
+    void VoxelizeObject(out GameObject go)
+    {
+        go = voxelizer.VoxelizeObject(objectToVoxel, _centerMaterial, _voxelMesh);
+        voxelizedObject = go;
     }
 
     bool CanNodeAReachNodeB(string nodeA, string nodeB, string previousNode)

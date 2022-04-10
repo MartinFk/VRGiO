@@ -1,13 +1,13 @@
 import asyncio
 import json
 from asyncio import get_event_loop
-from asyncio.windows_events import NULL
 from http import client
 from pickle import FALSE
 from time import sleep
 from turtle import delay
 from typing import Dict, List, Optional
 
+import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from h11 import ConnectionClosed
@@ -15,7 +15,6 @@ from starlette.websockets import WebSocket
 
 from structure_manager import StructureManager
 
-# current_touches = List()
 
 class ConnectionManager:
     def __init__(self):
@@ -35,6 +34,7 @@ class ConnectionManager:
     def return_websocket(self, client_id: str):
         return self.active_connections[client_id]
 
+
 app = FastAPI()
 origins = ["*"]
 app.add_middleware(
@@ -48,7 +48,9 @@ app.add_middleware(
 structure_manager = StructureManager()
 connection_manager = ConnectionManager()
 sides_touched = {}
-unitywebsocket = WebSocket()
+unitywebsocket = WebSocket(
+    scope={"type": "websocket", "path": "/unitywebsocket"}, receive=None, send=None)
+
 
 @app.websocket("/ws/{client_id}")
 async def websocket_endpoint(websocket: WebSocket, client_id: str):
@@ -62,6 +64,7 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
         websocket.close()
         connection_manager.disconnect(client_id)
 
+
 @app.websocket_route("/unity_ws")
 async def unity_websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
@@ -70,14 +73,17 @@ async def unity_websocket_endpoint(websocket: WebSocket):
         while True:
             await websocket.receive_text()
             await websocket.send_json(
-                {"type": "json", 
-                "nodes": [node for node in structure_manager.structure.nodes],
-                "edges": [{"node1":edge[0], "node2":edge[1], "side":edge[2]["side"]} for edge in structure_manager.structure.edges.data()],
-                "sides_touched": [{"src_ip":ip, "sides":sides_touched[ip]} for ip in sides_touched.keys()]})
+                {"type": "json",
+                 "nodes": [node for node in structure_manager.structure.nodes],
+                 "edges": [{"node1": edge[0], "node2":edge[1], "side":edge[2]["side"]} for edge in structure_manager.structure.edges.data()],
+                 "sides_touched": [{"src_ip": ip, "sides": sides_touched[ip]} for ip in sides_touched.keys()],
+                 "additional_data": []})
             await asyncio.sleep(1)
     except:
-        unitywebsocket = WebSocket()
+        unitywebsocket = WebSocket(
+            scope={"type": "websocket", "path": "/unitywebsocket"}, receive=None, send=None)
         await websocket.close()
+
 
 @app.get("/register/component")
 async def register_shape(
@@ -95,7 +101,8 @@ async def register_shape(
     Returns:
         response (Dict): Status about the operation
     """
-    component = [(src_ip, {"type": type, "component_class": component_class, "touch": {"left": False, "right": False, "top": False, "bottom": False, "front": False, "back": False}})]
+    component = [(src_ip, {"type": type, "component_class": component_class, "touch": {
+                  "left": False, "right": False, "top": False, "bottom": False, "front": False, "back": False}})]
     structure_manager.add_component(component)
     sides_touched[src_ip] = []
     # for (int i in range(6)):
@@ -182,6 +189,7 @@ async def get_info(src_ip: str):
         "event": "info",
     }
 
+
 @app.get("/component/ip_info")
 async def get_ip_info():
     ip_list = structure_manager.list_nodes()
@@ -191,13 +199,14 @@ async def get_ip_info():
         "event": "ip_info"
     }
 
+
 @app.get("/get_value/component")
-async def get_value(src_ip: str, type:int, value:int):
+async def get_value(src_ip: str, type: int, value: int):
     if not(value == 0):
         # if (type > 5):
-            connect_shape(src_ip, "left")
+        connect_shape(src_ip, "left")
         # else:
-            sides_touched[src_ip].append(type)
+        sides_touched[src_ip].append(type)
     else:
         if (type > 5):
             disconnect_shape(src_ip, src_ip)
@@ -213,6 +222,7 @@ async def get_value(src_ip: str, type:int, value:int):
 #          "ip": shape_class,
 #          "side": type,
 #          "value": value})
+
 
 @app.post("/component/actuate")
 async def actuate(src_ip: str, payload: Optional[Dict]):
@@ -241,7 +251,7 @@ async def actuate(src_ip: str, payload: Optional[Dict]):
     }
     return response
 
-import uvicorn
 
 if __name__ == '__main__':
-    uvicorn.run(app, host="0.0.0.0", port=8000, ws_ping_interval=5, ws_ping_timeout=10)
+    uvicorn.run(app, host="0.0.0.0", port=8000,
+                ws_ping_interval=5, ws_ping_timeout=10)

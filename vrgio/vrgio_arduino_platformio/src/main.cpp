@@ -3,6 +3,9 @@
 #include <ESP8266HTTPClient.h>
 #include <ESP8266WebServer.h>
 #include <WebSocketsClient.h>
+#include <sstream>
+#include <iostream>
+#include <string>
 
 const String server_host_name = "192.168.0.171";
 const String port = "8000";
@@ -27,8 +30,11 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length){
 
     case WStype_TEXT:
       Serial.printf("[WSc] get text: %s\n", payload);
-      if (String((char *)(payload)) == "get touch data") {
-        webSocket.sendTXT("type: {}, value: {}");
+      if (String((char *)(payload)) == "send data") {
+        std::ostringstream oss;
+        const char *additional_data = "";
+        oss << "{type:json, additional_data:[" << additional_data << "]}";
+        webSocket.sendTXT(oss.str().c_str());
       }
       break;
 

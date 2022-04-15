@@ -59,7 +59,8 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
     try:
         while True:
             data = await websocket.receive_text()
-            await websocket.send_text("get touch data")
+            jsondata = json.loads(data)
+            await websocket.send_text("send data")
     except:
         websocket.close()
         connection_manager.disconnect(client_id)
@@ -71,7 +72,8 @@ async def unity_websocket_endpoint(websocket: WebSocket):
     unitywebsocket = websocket
     try:
         while True:
-            await websocket.receive_text()
+            rcv_data = await websocket.receive_text()
+            print(rcv_data)
             await websocket.send_json(
                 {"type": "json",
                  "nodes": [node for node in structure_manager.structure.nodes],

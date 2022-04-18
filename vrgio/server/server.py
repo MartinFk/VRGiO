@@ -47,9 +47,20 @@ app.add_middleware(
 
 structure_manager = StructureManager()
 connection_manager = ConnectionManager()
-sides_touched = {}
+additional_data = {}
 unitywebsocket = WebSocket(
     scope={"type": "websocket", "path": "/unitywebsocket"}, receive=None, send=None)
+
+
+def handle_json_data(json):
+    return json["expect_answer"]
+
+
+def wrap_data(list_of_keys):
+    wrapped_data = {}
+    for key in list_of_keys:
+        wrapped_data[key] = additional_data[key]
+    return wrapped_data
 
 
 @app.websocket("/ws/{client_id}")
@@ -60,7 +71,11 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
         while True:
             data = await websocket.receive_text()
             jsondata = json.loads(data)
-            await websocket.send_text("send data")
+            if handle_json_data(jsondata):
+                await websocket.send_json(
+                    {"type": "json",
+                    "expect_answer": True,
+                    "data": wrap_data()})
     except:
         websocket.close()
         connection_manager.disconnect(client_id)
@@ -72,14 +87,15 @@ async def unity_websocket_endpoint(websocket: WebSocket):
     unitywebsocket = websocket
     try:
         while True:
-            rcv_data = await websocket.receive_text()
-            print(rcv_data)
-            await websocket.send_json(
-                {"type": "json",
-                 "nodes": [node for node in structure_manager.structure.nodes],
-                 "edges": [{"node1": edge[0], "node2":edge[1], "side":edge[2]["side"]} for edge in structure_manager.structure.edges.data()],
-                 "sides_touched": [{"src_ip": ip, "sides": sides_touched[ip]} for ip in sides_touched.keys()],
-                 "additional_data": []})
+            data = await websocket.receive_text()
+            jsondata = json.loads(data)
+            if handle_json_data(jsondata):
+                await websocket.send_json(
+                    {"type": "json",
+                    "expect_answer": True,
+                    "nodes": [node for node in structure_manager.structure.nodes],
+                    "edges": [{"node1": edge[0], "node2":edge[1], "side":edge[2]["side"]} for edge in structure_manager.structure.edges.data()],
+                    "additional_data": wrap_data(["sides_touched"])})
             await asyncio.sleep(1)
     except:
         unitywebsocket = WebSocket(
@@ -106,7 +122,6 @@ async def register_shape(
     component = [(src_ip, {"type": type, "component_class": component_class, "touch": {
                   "left": False, "right": False, "top": False, "bottom": False, "front": False, "back": False}})]
     structure_manager.add_component(component)
-    sides_touched[src_ip] = []
     # for (int i in range(6)):
     return {"status": True, "component_id": component[0][0], "event": "add"}
 
@@ -202,22 +217,41 @@ async def get_ip_info():
     }
 
 
-@app.get("/get_value/component")
-async def get_value(src_ip: str, type: int, value: int):
+touch_type_to_side = {0: "left", 1: "left", 2: "left", 3: "left", 4: "left", 5: "left",
+                      6: "left", 7: "left", 8: "left", 9: "left", 10: "left", 11: "left"}
+
+
+@app.get("/touch/component")
+async def touch(src_ip: str, type: int, value: int):
+    if not("sides_touched" in additional_data.keys()):
+        additional_data["sides_touched"] = []
+    sides_touched = additional_data["sides_touched"]
+    side = touch_type_to_side[type]
     if not(value == 0):
-        # if (type > 5):
-        connect_shape(src_ip, "left")
-        # else:
-        sides_touched[src_ip].append(type)
+        if (type > 5):
+            connect_shape(src_ip, side)
+        else:
+            touch_registered = False
+            for touch_dict in sides_touched:
+                if (touch_dict["src_ip"] == src_ip):
+                    touch_dict["sides"].append(side)
+                    touch_registered = True
+                    break
+            if not(touch_registered):
+                sides_touched.append(
+                    {"src_ip": src_ip, "sides": [side]})
     else:
         if (type > 5):
-            disconnect_shape(src_ip, src_ip)
+            other_src_ip = structure_manager  # TODO find other src_ip in structure_manager
+            disconnect_shape(src_ip, other_src_ip)
         else:
-            if (src_ip in sides_touched.keys()):
-                while True:
-                    sides_touched[src_ip].remove(type)
-                    if (not(type in sides_touched[src_ip])):
-                        break
+            for touch_dict in sides_touched:
+                if (touch_dict["src_ip"] == src_ip):
+                    while True:
+                        touch_dict["sides"].remove(side)
+                        if (not(side in sides_touched[src_ip])):
+                            break
+                    break
 # async def get_value(shape_class: str, type: int, value: int):
 #     await unitywebsocket.send_json(
 #         {"type": "json_touch",

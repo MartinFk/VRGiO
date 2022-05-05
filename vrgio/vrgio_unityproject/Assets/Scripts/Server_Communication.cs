@@ -59,6 +59,7 @@ public class Server_Communication : MonoBehaviour
     public delegate void newResponseDelegate(Dictionary<string, object> response);
     public static event newResponseDelegate OnResponseIncoming;
 
+    public String additional_data = "\"1\":\"2\"";
     /* ----------------------------------------------------------------------------------------- */
     // Update: adds new server responses to the responseDictList
     private void Update()
@@ -105,7 +106,7 @@ public class Server_Communication : MonoBehaviour
             ws.OnOpen += (sender, e) =>
             {
                 Debug.Log("connect to: " + sender.ToString());
-                ws.SendAsync("Start sending data", SendComplete);
+                ws.SendAsync("{\"type\":\"json\", \"expect_answer\": true, \"data\": \"Connected\"}", SendComplete);
             };
             ws.OnError += (sender, e) =>
             {
@@ -115,6 +116,7 @@ public class Server_Communication : MonoBehaviour
             {
                 if (e.IsText)
                 {
+                    Debug.Log("Received: " + e.Data);
                     stringData = e.Data;
                     if (stringData.Contains("{\"type\": \"json\", "))
                     {
@@ -123,7 +125,7 @@ public class Server_Communication : MonoBehaviour
                         edges = data.edges;
                         sides_touched = data.sides_touched;
                     }
-                    ws.SendAsync("Continue sending data", SendComplete);
+                    ws.SendAsync("{\"type\":\"json\", \"expect_answer\": true, \"data\": {" + additional_data + "}}", SendComplete);
                 }
                 else if (e.IsBinary)
                 {

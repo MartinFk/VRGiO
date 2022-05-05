@@ -58,6 +58,20 @@ unitywebsocket = WebSocket(
     scope={"type": "websocket", "path": "/unitywebsocket"}, receive=None, send=None)
 
 
+# def handle_json_data(json):
+#     if json["type"] == "json":
+#         assert isinstance(json, dict)
+#     if not(json["success"]):
+#         print("Error: message returned with success = false")
+#     data = json["data"]
+#     for key in data:
+#         if key == "touches":
+#             for touch in data[key]:
+#                 if not(touch in additional_data[key]):
+#                     additional_data[key].append(touch)
+#         if key == "actuate":
+#             for src_ip in data[key]:
+#                 additional_data[key][src_ip] = data[key][src_ip]
 def handle_json_data(json, client_id):
     if client_id == "unity":
         additional_data["unity"] = json["data"]
@@ -66,7 +80,7 @@ def handle_json_data(json, client_id):
     return json["expect_answer"]
 
 
-def wrap_data(data_category, list_of_keys): # data category is cubes or unity
+def wrap_data(data_category, list_of_keys):  # data category is cubes or unity
     wrapped_data = {}
     if list_of_keys and not(list_of_keys == ""):
         if list_of_keys == "all":
@@ -82,6 +96,8 @@ def wrap_data(data_category, list_of_keys): # data category is cubes or unity
 async def websocket_endpoint(websocket: WebSocket, client_id: str):
     await websocket.accept()
     connection_manager.connect(client_id, websocket)
+    # expect_answer = True
+    # additional_data["actuate"][client_id] = False
     try:
         while True:
             data = await websocket.receive_text()
@@ -90,13 +106,22 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
                 if handle_json_data(jsondata, client_id):
                     await websocket.send_json(
                         {"type": "json",
-                        "expect_answer": True,
-                        "data": wrap_data("unity", "all")})
+                         "expect_answer": True,
+                         "data": wrap_data("unity", "all")})
             except:
                 await websocket.send_json(
-                        {"type": "json",
-                        "expect_answer": True,
-                        "error": "Invalid JSON"})
+                    {"type": "json",
+                     "expect_answer": True,
+                     "error": "Invalid JSON"})
+            # if (expect_answer):
+            #     data = await websocket.receive_text()
+            #     jsondata = json.loads(data)
+            # if not(expect_answer) or handle_json_data(jsondata):
+            #     await websocket.send_json(
+            #         {"type": "json",
+            #          "expect_answer": True,
+            #          "actuate": additional_data["actuate"][client_id],
+            #          "data": wrap_data("touches")})
     except:
         websocket.close()
         connection_manager.disconnect(client_id)
@@ -106,6 +131,7 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
 async def unity_websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     unitywebsocket = websocket
+    # expect_answer = True
     try:
         while True:
             data = await websocket.receive_text()
@@ -114,16 +140,27 @@ async def unity_websocket_endpoint(websocket: WebSocket):
                 if handle_json_data(jsondata, "unity"):
                     await websocket.send_json(
                         {"type": "json",
-                        "expect_answer": True,
-                        "nodes": [node for node in structure_manager.structure.nodes],
-                        "edges": [{"node1": edge[0], "node2":edge[1], "side":edge[2]["side"]} for edge in structure_manager.structure.edges.data()],
-                        "additional_data": wrap_data("cubes", "all")})
+                         "expect_answer": True,
+                         "nodes": [node for node in structure_manager.structure.nodes],
+                         "edges": [{"node1": edge[0], "node2":edge[1], "side":edge[2]["side"]} for edge in structure_manager.structure.edges.data()],
+                         "additional_data": wrap_data("cubes", "all")})
             except:
                 await websocket.send_json(
-                            {"type": "json",
-                            "expect_answer": True,
-                            "error": "Invalid JSON"})
+                    {"type": "json",
+                             "expect_answer": True,
+                             "error": "Invalid JSON"})
             await asyncio.sleep(0.2)
+            # if (expect_answer):
+            #     data = await websocket.receive_text()
+            #     jsondata = json.loads(data)
+            # if not(expect_answer) or handle_json_data(jsondata):
+            #     await websocket.send_json(
+            #         {"type": "json",
+            #          "expect_answer": expect_answer,
+            #          "nodes": [node for node in structure_manager.structure.nodes],
+            #          "edges": [{"node1": edge[0], "node2":edge[1], "side":edge[2]["side"]} for edge in structure_manager.structure.edges.data()],
+            #          "additional_data": wrap_data(["sides_touched"])})
+            # await asyncio.sleep(1)
     except:
         unitywebsocket = WebSocket(
             scope={"type": "websocket", "path": "/unitywebsocket"}, receive=None, send=None)

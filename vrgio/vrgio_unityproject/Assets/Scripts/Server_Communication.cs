@@ -4,6 +4,7 @@ using System.Text;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Assertions;
 using UnityEngine.Networking;
 using WebSocketSharp;
 
@@ -23,12 +24,23 @@ public class Touch
 }
 
 [Serializable]
-public class NodeEdgeInfo
+public class ReceivingJsonSchema
 {
     public string type;
+    public bool expect_answer;
     public List<string> nodes;
     public List<Edge> edges;
-    public List<Touch> sides_touched;
+    public List<object> additional_data;
+}
+
+[Serializable]
+public class SendingJsonSchema
+{
+    public string type;
+    public bool expect_answer;
+    public bool success;
+    public bool actuate;
+    public List<object> data;
 }
 
 public class Server_Communication : MonoBehaviour
@@ -118,12 +130,40 @@ public class Server_Communication : MonoBehaviour
                 {
                     Debug.Log("Received: " + e.Data);
                     stringData = e.Data;
-                    if (stringData.Contains("{\"type\": \"json\", "))
+                    try
                     {
-                        var data = JsonUtility.FromJson<NodeEdgeInfo>(stringData);
+                        var data = JsonConvert.DeserializeObject<ReceivingJsonSchema>(stringData);
+                        AreEqual(data.type, "json");
                         nodes = data.nodes;
                         edges = data.edges;
-                        sides_touched = data.sides_touched;
+                        if (data.additional_data != null)
+                        {
+                            foreach (object item in data.additional_data)
+                            {
+                                if (item.GetType() == typeof(List<Touch>))
+                                {
+                                    sides_touched = (List<Touch>)item;
+                                }
+                            }
+                        }
+                        if (data.expect_answer)
+                        {
+                            bool actuate;
+                            List<object> data = new List<object>();
+                            string message = JsonConvert.SerializeObject(new SendingJsonSchema()
+                            {
+                                type = "json",
+                                expect_answer = true,
+                                success = true,
+                                actuate = actuate,
+                                data = data
+                            });
+                            ws.SendAsync(message, SendComplete);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.Log(ex.Message);
                     }
                     ws.SendAsync("{\"type\":\"json\", \"expect_answer\": true, \"data\": {" + additional_data + "}}", SendComplete);
                 }

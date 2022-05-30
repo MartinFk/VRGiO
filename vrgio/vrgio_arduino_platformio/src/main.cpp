@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <ArduinoJson.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
 #include <ESP8266WebServer.h>
@@ -13,10 +14,15 @@ const char *ssid = "PingSlayer";        //"vrgio-iot";
 const char* password = "slaytheping117";//"vrgiovrgio";
 ESP8266WebServer server(80); // webserver object for listening to HTTP requests
 WebSocketsClient webSocket;  // websocket object
+DynamicJsonDocument doc(1024);
+String cube_type = "";
 
 void registerCube();
 void actuate();
-void webSocketEvent(WStype_t type, uint8_t * payload, size_t length){
+String receive_json();
+JsonObject create_message_data();
+void webSocketEvent(WStype_t type, uint8_t *payload, size_t length)
+{
   switch (type){
     case WStype_DISCONNECTED:
       Serial.printf("[WSc] Disconnected!\n");
@@ -28,13 +34,12 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length){
       }
       break;
 
-    case WStype_TEXT:
+    case WStype_TEXT: {
       Serial.printf("[WSc] get text: %s\n", payload);
-      if (String((char *)(payload)) == "send data") {
-        std::ostringstream oss;
-        const char *additional_data = "";
-        oss << "{type:json, additional_data:[" << additional_data << "]}";
-        webSocket.sendTXT(oss.str().c_str());
+      deserializeJson(doc, String((char *)(payload)));
+      JsonObject obj = doc.as<JsonObject>();
+      String message = receive_json(obj);
+      webSocket.sendTXT(message);
       }
       break;
 
@@ -44,8 +49,7 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length){
     }
 }
 
-void setup () {
-  
+void setup () {  
   Serial.begin(9600);
  
   WiFi.begin(ssid, password);
@@ -103,6 +107,37 @@ void actuate(){
     }   
   // send successful response back to client
   server.send(200, "application/json", "{\"result\": true}");  // response to the HTTP request
+}
+
+String receive_json(JsonObject obj) {
+  bool success = true;
+  deserializeJson(doc, "{\"type\": \"json\", \"expect_answer\":true}");
+  JsonObject message = doc.as<JsonObject>();
+  if (obj["action"] == "actuate")
+  {
+    JsonObject actuate_data = obj["data"]["actuate"];
+    if (actuate_data["type"] == cube_type)
+    {
+      actuate(); // actuate(actuate_data["value"]);
+    }
+    else
+    {
+      success = false;
+    }
+  }
+  message["success"] = success;
+  JsonObject data = create_message_data();
+  message["data"] = data;
+  return "";
+}
+
+JsonObject create_message_data() {
+  deserializeJson(doc, "{}");
+  JsonObject data = doc.as<JsonObject>();
+  /**
+  TODO: ADD ANY DATA TO BE SENT HERE.
+  **/
+  return data;
 }
 
 void loop() {

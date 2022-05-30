@@ -71,6 +71,7 @@ public class Server_Communication : MonoBehaviour
     public delegate void newResponseDelegate(Dictionary<string, object> response);
     public static event newResponseDelegate OnResponseIncoming;
 
+    public Dictionary<string, bool> shouldActuate = new Dictionary<string, bool>();
     public String additional_data = "\"1\":\"2\"";
     /* ----------------------------------------------------------------------------------------- */
     // Update: adds new server responses to the responseDictList
@@ -132,13 +133,13 @@ public class Server_Communication : MonoBehaviour
                     stringData = e.Data;
                     try
                     {
-                        var data = JsonConvert.DeserializeObject<ReceivingJsonSchema>(stringData);
-                        AreEqual(data.type, "json");
-                        nodes = data.nodes;
-                        edges = data.edges;
-                        if (data.additional_data != null)
+                        var receivingData = JsonConvert.DeserializeObject<ReceivingJsonSchema>(stringData);
+                        Assert.AreEqual(receivingData.type, "json");
+                        nodes = receivingData.nodes;
+                        edges = receivingData.edges;
+                        if (receivingData.additional_data != null)
                         {
-                            foreach (object item in data.additional_data)
+                            foreach (object item in receivingData.additional_data)
                             {
                                 if (item.GetType() == typeof(List<Touch>))
                                 {
@@ -146,17 +147,17 @@ public class Server_Communication : MonoBehaviour
                                 }
                             }
                         }
-                        if (data.expect_answer)
+                        if (receivingData.expect_answer)
                         {
-                            bool actuate;
-                            List<object> data = new List<object>();
+                            bool actuate = shouldActuate.ContainsKey(sender.ToString()) ? shouldActuate[sender.ToString()] : false;
+                            List<object> sendingData = new List<object>();
                             string message = JsonConvert.SerializeObject(new SendingJsonSchema()
                             {
                                 type = "json",
                                 expect_answer = true,
                                 success = true,
                                 actuate = actuate,
-                                data = data
+                                data = sendingData
                             });
                             ws.SendAsync(message, SendComplete);
                         }

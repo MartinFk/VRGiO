@@ -23,7 +23,7 @@ class TouchSensor {
   uint8_t setup() {
     status = 0;
     delay(100);
-    if (!cap.begin(0x5C)) {  // Error: MPR121 not found
+    if (!cap.begin(0x5A)) {  // Error: MPR121 not found
       status = 1;
     }
     return status;

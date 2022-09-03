@@ -928,7 +928,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!136 &452611952
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -2311,7 +2311,6 @@ MonoBehaviour:
   nodes: []
   edges: []
   sides_touched: []
-  additional_data: '"1":"2"'
 --- !u!4 &1717174294
 Transform:
   m_ObjectHideFlags: 0

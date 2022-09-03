@@ -123,7 +123,7 @@ public class Server_Communication : MonoBehaviour
             };
             ws.OnError += (sender, e) =>
             {
-                Debug.Log(e.Exception + "; " + e.Message);
+                Debug.Log(e.Exception);
             };
             ws.OnMessage += (sender, e) =>
             {
@@ -175,11 +175,10 @@ public class Server_Communication : MonoBehaviour
             };
             ws.OnClose += (sender, e) =>
             {
-                Debug.Log("closed connection: " + e.Code + "; Reason=" + e.Reason + "; Clean?=" + e.WasClean + sender);
+                Debug.Log("closed connection.");
             };
 
             ws.ConnectAsync();
-            Debug.Log("should connect");
             websocket = ws;
             while (true)
             {
@@ -407,9 +406,9 @@ public class Server_Communication : MonoBehaviour
         StartCoroutine(GetRequest(uri));
     }
 
-    public void Start()
+    private void Start()
     {
-        
+        StartCoroutine(InitWebSocket());
         // RegisterComponent("ip1");
         // RegisterComponent("ip2");
         // RegisterComponent("ip3");
@@ -423,13 +422,5 @@ public class Server_Communication : MonoBehaviour
         // ComponentInfo("ip3");
         // ComponentActuate("ip3", "{}");
         // VisualizeGraph();
-    }
-    public void f()
-    {
-        StartCoroutine(InitWebSocket());
-    }
-    private void Awake()
-    {
-        UnitySystemConsoleRedirector.Redirect();
     }
 }

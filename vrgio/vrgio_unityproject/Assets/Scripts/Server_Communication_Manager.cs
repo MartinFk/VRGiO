@@ -73,4 +73,9 @@ public class Server_Communication_Manager : MonoBehaviour
         sc.GetIpInfo();
         Debug.Log("GetRequest sent: GetIpInfo");
     }
+
+    public void f()
+    {
+        sc.f();
+    }
 }
